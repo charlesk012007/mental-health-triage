@@ -1,0 +1,653 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mental Health Triage (Educational)</title>
+  <style>
+    :root { --bg:#0b0f1a; --card:#121a2b; --muted:#9fb0d0; --text:#eaf0ff; --accent:#7aa2ff; --warn:#ffcc66; --danger:#ff6b6b; --ok:#61d095; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial; background: linear-gradient(180deg, #070a12, var(--bg)); color: var(--text); }
+    .wrap { max-width: 980px; margin: 0 auto; padding: 18px; }
+    .header { display:flex; gap:12px; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; }
+    h1 { font-size: 20px; margin: 0 0 6px 0; }
+    .sub { color: var(--muted); font-size: 13px; line-height: 1.35; }
+    .pill { display:inline-flex; gap:8px; align-items:center; padding:8px 10px; border-radius:999px; background: rgba(122,162,255,.12); border:1px solid rgba(122,162,255,.28); color: var(--text); font-size: 12px; }
+    .grid { display:grid; gap:14px; margin-top: 14px; }
+    @media(min-width: 900px){ .grid { grid-template-columns: 1.1fr .9fr; } }
+    .card { background: rgba(18,26,43,.92); border:1px solid rgba(255,255,255,.08); border-radius: 14px; padding: 14px; box-shadow: 0 10px 30px rgba(0,0,0,.25); }
+    .card h2 { font-size: 15px; margin: 0 0 10px 0; }
+    .divider { height:1px; background: rgba(255,255,255,.08); margin: 12px 0; }
+    .q { padding: 10px 10px; border-radius: 12px; border:1px solid rgba(255,255,255,.08); background: rgba(255,255,255,.03); margin-bottom: 10px; }
+    .q .label { font-size: 13px; margin-bottom: 8px; color: var(--text); }
+    .options { display:flex; flex-wrap:wrap; gap:8px; }
+    button.opt {
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+      color: var(--text);
+      padding: 8px 10px;
+      border-radius: 10px;
+      font-size: 13px;
+      cursor:pointer;
+      transition: transform .05s ease, background .15s ease, border .15s ease;
+    }
+    button.opt:active { transform: scale(.98); }
+    button.opt.sel { border-color: rgba(122,162,255,.65); background: rgba(122,162,255,.18); }
+    .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .row > * { flex: 1 1 auto; }
+    .small { font-size: 12px; color: var(--muted); }
+    .danger { color: var(--danger); }
+    .warn { color: var(--warn); }
+    .ok { color: var(--ok); }
+    .scorebox { display:flex; gap:10px; flex-wrap:wrap; }
+    .score { flex:1 1 160px; padding: 10px; border-radius: 12px; border:1px solid rgba(255,255,255,.08); background: rgba(0,0,0,.14); }
+    .score .n { font-size: 22px; font-weight: 700; margin-top: 3px; }
+    .score .k { font-size: 12px; color: var(--muted); }
+    .cta { display:flex; gap:10px; flex-wrap:wrap; margin-top: 10px; }
+    .btn {
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 12px;
+      font-size: 13px;
+      cursor:pointer;
+    }
+    .btn.primary { border-color: rgba(122,162,255,.65); background: rgba(122,162,255,.20); }
+    .btn.danger { border-color: rgba(255,107,107,.7); background: rgba(255,107,107,.16); }
+    .list { display:flex; flex-direction:column; gap:10px; }
+    .rec { padding: 12px; border-radius: 14px; border:1px solid rgba(255,255,255,.08); background: rgba(255,255,255,.03); }
+    .rec .top { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+    .rec .name { font-weight: 700; }
+    .tag { font-size: 11px; padding: 5px 8px; border-radius: 999px; border:1px solid rgba(255,255,255,.12); color: var(--muted); }
+    .rec ul { margin: 8px 0 0 18px; color: var(--muted); font-size: 12px; }
+    .foot { margin-top: 12px; font-size: 12px; color: var(--muted); line-height:1.35; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="header">
+      <div>
+        <h1>Mental Health Triage (Educational) + PHQ-9 + GAD-7 + Med Preference Tree</h1>
+        <div class="sub">
+          <span class="danger"><b>DISCLAIMER:</b></span> Educational only. Not diagnosis/prescription. Not for emergencies.
+          If you might harm yourself/others, seek urgent help (local emergency number or crisis line).
+        </div>
+      </div>
+      <div class="pill"><span>Single-file</span><span>•</span><span>No backend</span><span>•</span><span>Runs on GitHub Pages</span></div>
+    </div>
+
+    <div class="grid">
+      <div class="card" id="leftCard">
+        <h2>1) Screening (past 2 weeks)</h2>
+        <div class="small">Tap an option for each question (0–3). PHQ-9 includes the suicidality item (Q9).</div>
+        <div class="divider"></div>
+
+        <div id="screening"></div>
+
+        <div class="divider"></div>
+        <div class="scorebox">
+          <div class="score">
+            <div class="k">PHQ-9 total</div>
+            <div class="n" id="phqTotal">0</div>
+            <div class="k" id="phqBand">—</div>
+          </div>
+          <div class="score">
+            <div class="k">GAD-7 total</div>
+            <div class="n" id="gadTotal">0</div>
+            <div class="k" id="gadBand">—</div>
+          </div>
+          <div class="score">
+            <div class="k">Safety flag (PHQ-9 Q9)</div>
+            <div class="n" id="safetyFlag">—</div>
+            <div class="k" id="safetyHint">—</div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+        <h2>2) Preference / Symptom targets</h2>
+        <div class="small">These guide an educational “fit score” (not medical advice).</div>
+        <div class="divider"></div>
+        <div id="triage"></div>
+
+        <div class="cta">
+          <button class="btn primary" id="btnRank">Rank options</button>
+          <button class="btn" id="btnShare">Copy summary</button>
+          <button class="btn danger" id="btnReset">Reset</button>
+        </div>
+
+        <div class="foot">
+          <b>What this does:</b> uses PHQ-9/GAD-7 severity + your priorities to rank common medication “profiles”
+          (e.g., more activating vs more sedating; weight/sexual side effects; pain/migraine/nicotine considerations).
+          <b>It does not choose a prescription.</b>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Results</h2>
+        <div class="small">Ranked educational options (highest “fit” first). Always review with a clinician.</div>
+        <div class="divider"></div>
+
+        <div id="alerts"></div>
+
+        <div class="list" id="results">
+          <div class="rec">
+            <div class="top">
+              <div class="name">No results yet</div>
+              <span class="tag">Tap “Rank options”</span>
+            </div>
+            <ul>
+              <li>Complete PHQ-9 and GAD-7</li>
+              <li>Set a few priorities (sleep/weight/sexual side effects, etc.)</li>
+              <li>Then rank</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+        <div class="foot">
+          <b>Emergency note:</b> If PHQ-9 Q9 is anything other than “Not at all,” this will show a safety warning.
+          This app cannot provide crisis support.
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* ===========================
+   DATA
+=========================== */
+const likertOptions = [
+  { label: "Not at all", value: 0 },
+  { label: "Several days", value: 1 },
+  { label: "More than half the days", value: 2 },
+  { label: "Nearly every day", value: 3 },
+];
+
+const symptomQuestions = [
+  // PHQ-9 (past 2 weeks)
+  { id: "phq1", scale: "PHQ9", text: "Little interest or pleasure in doing things" },
+  { id: "phq2", scale: "PHQ9", text: "Feeling down, depressed, or hopeless" },
+  { id: "phq3", scale: "PHQ9", text: "Trouble falling or staying asleep, or sleeping too much" },
+  { id: "phq4", scale: "PHQ9", text: "Feeling tired or having little energy" },
+  { id: "phq5", scale: "PHQ9", text: "Poor appetite or overeating" },
+  { id: "phq6", scale: "PHQ9", text: "Feeling bad about yourself — or that you are a failure or have let yourself or your family down" },
+  { id: "phq7", scale: "PHQ9", text: "Trouble concentrating on things, such as reading or watching television" },
+  { id: "phq8", scale: "PHQ9", text: "Moving or speaking so slowly that others could have noticed? Or the opposite — being fidgety or restless" },
+  { id: "phq9", scale: "PHQ9", text: "Thoughts that you would be better off dead or of hurting yourself" },
+  // GAD-7 (past 2 weeks)
+  { id: "gad1", scale: "GAD7", text: "Feeling nervous, anxious, or on edge" },
+  { id: "gad2", scale: "GAD7", text: "Not being able to stop or control worrying" },
+  { id: "gad3", scale: "GAD7", text: "Worrying too much about different things" },
+  { id: "gad4", scale: "GAD7", text: "Trouble relaxing" },
+  { id: "gad5", scale: "GAD7", text: "Being so restless that it is hard to sit still" },
+  { id: "gad6", scale: "GAD7", text: "Becoming easily annoyed or irritable" },
+  { id: "gad7", scale: "GAD7", text: "Feeling afraid as if something awful might happen" },
+];
+
+const triageQuestions = [
+  { id: "mania", type: "yesno", text: "Have you ever had several days of unusually high energy or much less sleep AND were more talkative/impulsive, or had racing thoughts?" },
+  { id: "panic", type: "yesno", text: "Do you have panic attacks (sudden surges of intense fear with palpitations, shortness of breath, or feeling out of control)?" },
+  { id: "sleep", type: "choice", text: "Which best fits your sleep right now?", choices: [
+    { label: "Trouble falling asleep", value: "onset" },
+    { label: "Waking up a lot / early morning awakenings", value: "maintenance" },
+    { label: "Sleeping too much", value: "too_much" },
+    { label: "Sleep not a major problem", value: "none" },
+  ]},
+  { id: "weightGoal", type: "choice", text: "Weight priority (choose one):", choices: [
+    { label: "Avoid weight gain is very important", value: "avoid_gain" },
+    { label: "Weight neutral is preferred", value: "neutral" },
+    { label: "Weight change is not a major concern", value: "no" },
+  ]},
+  { id: "sexSE", type: "choice", text: "Sexual side effects priority (choose one):", choices: [
+    { label: "Avoid sexual side effects is very important", value: "avoid" },
+    { label: "Some concern", value: "some" },
+    { label: "Not a major concern", value: "no" },
+  ]},
+  { id: "lowEnergy", type: "yesno", text: "Is low energy/fatigue one of your top 2 problems?" },
+  { id: "poorFocus", type: "yesno", text: "Is poor focus/concentration one of your top 2 problems?" },
+  { id: "jittery", type: "yesno", text: "Do you get jittery/anxious easily with caffeine or stimulants?" },
+  { id: "chronicPain", type: "yesno", text: "Do you have significant chronic pain (neuropathic pain, fibromyalgia, chronic back/neck pain) you'd like treated too?" },
+  { id: "migraine", type: "yesno", text: "Do you have frequent migraines/headaches you'd like to reduce?" },
+  { id: "smoking", type: "yesno", text: "Do you use nicotine (smoking/vaping) and want help quitting?" },
+  { id: "treatmentHistory", type: "choice", text: "Have you tried antidepressants before?", choices: [
+    { label: "No / first time", value: "naive" },
+    { label: "Yes — worked in the past", value: "worked" },
+    { label: "Yes — didn't work or side effects stopped it", value: "failed" },
+  ]},
+];
+
+// Educational “profiles” (NOT prescriptions)
+const meds = [
+  {
+    key: "ssri_sertraline",
+    name: "SSRI (e.g., sertraline/escitalopram)",
+    tags: ["first-line anxiety/depression"],
+    pros: ["Often good for anxiety + depression", "Generally weight-neutral to mild gain (varies)", "Non-sedating to mild sedation (varies)"],
+    cons: ["Sexual side effects can occur", "May worsen insomnia in some", "Activation/jitteriness in some early on"],
+    base: 60
+  },
+  {
+    key: "snri_duloxetine",
+    name: "SNRI (e.g., duloxetine/venlafaxine)",
+    tags: ["depression/anxiety + pain"],
+    pros: ["Can help depression + anxiety", "Can help some chronic pain syndromes (esp duloxetine)", "Usually not very sedating"],
+    cons: ["Can raise blood pressure (some SNRIs)", "Sexual side effects possible", "Discontinuation symptoms if stopped abruptly"],
+    base: 58
+  },
+  {
+    key: "bupropion",
+    name: "Bupropion (Wellbutrin profile)",
+    tags: ["activating", "low sexual SE"],
+    pros: ["Often less sexual side effects", "Often weight-neutral or loss", "Can help energy/focus in some", "Can help nicotine cravings in some"],
+    cons: ["May worsen anxiety/panic in some", "Can worsen insomnia", "Avoid in seizure/eating disorder history (medical)"],
+    base: 55
+  },
+  {
+    key: "mirtazapine",
+    name: "Mirtazapine profile",
+    tags: ["sleep/appetite"],
+    pros: ["Often improves sleep onset/maintenance", "Can improve appetite", "Often calming"],
+    cons: ["Weight gain common", "Daytime grogginess (dose-dependent)", "Not ideal if avoiding weight gain"],
+    base: 52
+  },
+  {
+    key: "tca_lowdose",
+    name: "TCA (low-dose profile; educational)",
+    tags: ["pain/migraine", "sedating"],
+    pros: ["Can help neuropathic pain", "Can help migraine prevention (some TCAs)", "Often improves sleep"],
+    cons: ["Anticholinergic side effects (dry mouth/constipation)", "Weight gain possible", "Cardiac/QT considerations (medical)"],
+    base: 46
+  }
+];
+
+/* ===========================
+   STATE
+=========================== */
+const state = {
+  symptoms: Object.fromEntries(symptomQuestions.map(q => [q.id, null])),
+  triage: Object.fromEntries(triageQuestions.map(q => [q.id, null])),
+};
+
+function $(id){ return document.getElementById(id); }
+
+function phqScore(){
+  return symptomQuestions.filter(q => q.scale==="PHQ9")
+    .reduce((sum,q)=> sum + (Number.isInteger(state.symptoms[q.id]) ? state.symptoms[q.id] : 0), 0);
+}
+function gadScore(){
+  return symptomQuestions.filter(q => q.scale==="GAD7")
+    .reduce((sum,q)=> sum + (Number.isInteger(state.symptoms[q.id]) ? state.symptoms[q.id] : 0), 0);
+}
+function bandPHQ(total){
+  if(total<=4) return "Minimal";
+  if(total<=9) return "Mild";
+  if(total<=14) return "Moderate";
+  if(total<=19) return "Moderately severe";
+  return "Severe";
+}
+function bandGAD(total){
+  if(total<=4) return "Minimal";
+  if(total<=9) return "Mild";
+  if(total<=14) return "Moderate";
+  return "Severe";
+}
+
+/* ===========================
+   RENDER
+=========================== */
+function renderScreening(){
+  const host = $("screening");
+  host.innerHTML = "";
+  symptomQuestions.forEach((q) => {
+    const box = document.createElement("div");
+    box.className = "q";
+    const label = document.createElement("div");
+    label.className = "label";
+    label.textContent = `${q.scale} ${q.id.toUpperCase()} — ${q.text}`;
+    const opts = document.createElement("div");
+    opts.className = "options";
+    likertOptions.forEach(o => {
+      const b = document.createElement("button");
+      b.className = "opt" + (state.symptoms[q.id]===o.value ? " sel" : "");
+      b.type = "button";
+      b.textContent = `${o.label} (${o.value})`;
+      b.onclick = () => { state.symptoms[q.id] = o.value; renderAll(); };
+      opts.appendChild(b);
+    });
+    box.appendChild(label);
+    box.appendChild(opts);
+    host.appendChild(box);
+  });
+}
+
+function renderTriage(){
+  const host = $("triage");
+  host.innerHTML = "";
+  triageQuestions.forEach(q => {
+    const box = document.createElement("div");
+    box.className = "q";
+    const label = document.createElement("div");
+    label.className = "label";
+    label.textContent = q.text;
+    const opts = document.createElement("div");
+    opts.className = "options";
+
+    if(q.type === "yesno"){
+      ["Yes","No"].forEach((t,i) => {
+        const val = i===0 ? true : false;
+        const b = document.createElement("button");
+        b.className = "opt" + (state.triage[q.id]===val ? " sel" : "");
+        b.type = "button";
+        b.textContent = t;
+        b.onclick = () => { state.triage[q.id] = val; renderAll(); };
+        opts.appendChild(b);
+      });
+    } else if(q.type === "choice"){
+      q.choices.forEach(ch => {
+        const b = document.createElement("button");
+        b.className = "opt" + (state.triage[q.id]===ch.value ? " sel" : "");
+        b.type = "button";
+        b.textContent = ch.label;
+        b.onclick = () => { state.triage[q.id] = ch.value; renderAll(); };
+        opts.appendChild(b);
+      });
+    }
+
+    box.appendChild(label);
+    box.appendChild(opts);
+    host.appendChild(box);
+  });
+}
+
+function renderScores(){
+  const phq = phqScore();
+  const gad = gadScore();
+  $("phqTotal").textContent = phq;
+  $("gadTotal").textContent = gad;
+  $("phqBand").textContent = bandPHQ(phq);
+  $("gadBand").textContent = bandGAD(gad);
+
+  const q9 = state.symptoms["phq9"];
+  if(q9 === null){
+    $("safetyFlag").textContent = "—";
+    $("safetyHint").textContent = "Complete PHQ-9 Q9";
+    $("safetyHint").className = "k";
+  } else if(q9 === 0){
+    $("safetyFlag").textContent = "No";
+    $("safetyHint").textContent = "No suicidal ideation reported";
+    $("safetyHint").className = "k ok";
+  } else {
+    $("safetyFlag").textContent = "Yes";
+    $("safetyHint").textContent = "Safety check recommended";
+    $("safetyHint").className = "k danger";
+  }
+}
+
+function renderAlerts(){
+  const host = $("alerts");
+  host.innerHTML = "";
+  const phq = phqScore(), gad = gadScore();
+  const q9 = state.symptoms["phq9"];
+  const mania = state.triage["mania"];
+
+  const alerts = [];
+
+  if(q9 !== null && q9 > 0){
+    alerts.push({ kind:"danger", title:"Safety warning (PHQ-9 Q9 > 0)",
+      body:"If you’re having thoughts of self-harm or suicide, seek urgent help now (local emergency number or crisis line). This tool is not emergency support."});
+  }
+  if(mania === true){
+    alerts.push({ kind:"warn", title:"Possible bipolar/mania history flagged",
+      body:"Antidepressants can sometimes worsen mania/hypomania. Educational flag only — discuss urgently with a clinician before any medication changes."});
+  }
+  if(phq >= 20 || gad >= 15){
+    alerts.push({ kind:"warn", title:"High symptom severity",
+      body:"Scores suggest severe symptoms. Consider clinician evaluation soon; therapy + medication planning may be appropriate."});
+  }
+
+  alerts.forEach(a => {
+    const div = document.createElement("div");
+    div.className = "rec";
+    const top = document.createElement("div");
+    top.className = "top";
+    const name = document.createElement("div");
+    name.className = "name " + (a.kind==="danger" ? "danger" : "warn");
+    name.textContent = a.title;
+    const tag = document.createElement("span");
+    tag.className = "tag";
+    tag.textContent = a.kind.toUpperCase();
+    top.appendChild(name); top.appendChild(tag);
+    const p = document.createElement("div");
+    p.className = "small";
+    p.style.marginTop = "6px";
+    p.textContent = a.body;
+    div.appendChild(top); div.appendChild(p);
+    host.appendChild(div);
+  });
+}
+
+/* ===========================
+   RANKING (EDUCATIONAL HEURISTICS)
+=========================== */
+function rankMeds(){
+  const phq = phqScore();
+  const gad = gadScore();
+
+  const t = state.triage;
+
+  const wantAvoidWeightGain = t.weightGoal === "avoid_gain";
+  const wantAvoidSexSE = t.sexSE === "avoid";
+  const someSexConcern = t.sexSE === "some";
+  const insomniaOnset = t.sleep === "onset" || t.sleep === "maintenance";
+  const hypersomnia = t.sleep === "too_much";
+  const lowEnergy = t.lowEnergy === true;
+  const poorFocus = t.poorFocus === true;
+  const jittery = t.jittery === true;
+  const panic = t.panic === true;
+  const pain = t.chronicPain === true;
+  const migraine = t.migraine === true;
+  const smoking = t.smoking === true;
+
+  const results = meds.map(m => {
+    let score = m.base;
+
+    if(phq >= 15) score += 3;
+    if(gad >= 10) score += 3;
+
+    if(insomniaOnset){
+      if(m.key === "mirtazapine") score += 10;
+      if(m.key === "tca_lowdose") score += 6;
+      if(m.key === "bupropion") score -= 8;
+    }
+    if(hypersomnia){
+      if(m.key === "bupropion") score += 8;
+      if(m.key === "mirtazapine") score -= 8;
+      if(m.key === "tca_lowdose") score -= 6;
+    }
+
+    if(wantAvoidWeightGain){
+      if(m.key === "bupropion") score += 10;
+      if(m.key === "mirtazapine") score -= 12;
+      if(m.key === "tca_lowdose") score -= 6;
+      if(m.key.startsWith("ssri_")) score += 1;
+      if(m.key.startsWith("snri_")) score += 2;
+    }
+
+    if(wantAvoidSexSE){
+      if(m.key === "bupropion") score += 10;
+      if(m.key.startsWith("ssri_")) score -= 8;
+      if(m.key.startsWith("snri_")) score -= 6;
+    } else if(someSexConcern){
+      if(m.key === "bupropion") score += 5;
+      if(m.key.startsWith("ssri_")) score -= 4;
+      if(m.key.startsWith("snri_")) score -= 3;
+    }
+
+    if(lowEnergy || poorFocus){
+      if(m.key === "bupropion") score += 8;
+      if(m.key === "mirtazapine") score -= 4;
+      if(m.key === "tca_lowdose") score -= 3;
+    }
+
+    if(panic || jittery){
+      if(m.key === "bupropion") score -= 8;
+      if(m.key.startsWith("ssri_")) score += 5;
+      if(m.key.startsWith("snri_")) score += 3;
+      if(m.key === "mirtazapine") score += 4;
+    }
+
+    if(pain){
+      if(m.key === "snri_duloxetine") score += 10;
+      if(m.key === "tca_lowdose") score += 6;
+    }
+    if(migraine){
+      if(m.key === "tca_lowdose") score += 8;
+    }
+    if(smoking){
+      if(m.key === "bupropion") score += 6;
+    }
+
+    if(t.mania === true){
+      score -= 10;
+    }
+
+    if(t.treatmentHistory === "worked") score += 2;
+    if(t.treatmentHistory === "failed") score -= 2;
+
+    score = Math.max(0, Math.min(100, score));
+    return { ...m, score };
+  }).sort((a,b)=> b.score - a.score);
+
+  return results;
+}
+
+function renderResults(list){
+  const host = $("results");
+  host.innerHTML = "";
+  list.forEach((m, idx) => {
+    const div = document.createElement("div");
+    div.className = "rec";
+    const top = document.createElement("div");
+    top.className = "top";
+
+    const name = document.createElement("div");
+    name.className = "name";
+    name.textContent = `${idx+1}. ${m.name}`;
+
+    const tag = document.createElement("span");
+    tag.className = "tag mono";
+    tag.textContent = `Fit ${m.score}/100`;
+
+    top.appendChild(name);
+    top.appendChild(tag);
+
+    const ul = document.createElement("ul");
+    const bullets = [
+      ...m.tags.map(t => `Profile: ${t}`),
+      ...m.pros.slice(0,2).map(p => `Pros: ${p}`),
+      ...m.cons.slice(0,2).map(c => `Caution: ${c}`),
+    ];
+    bullets.forEach(b => {
+      const li = document.createElement("li");
+      li.textContent = b;
+      ul.appendChild(li);
+    });
+
+    div.appendChild(top);
+    div.appendChild(ul);
+    host.appendChild(div);
+  });
+}
+
+/* ===========================
+   SUMMARY / COPY
+=========================== */
+function buildSummary(){
+  const phq = phqScore(), gad = gadScore();
+  const q9 = state.symptoms["phq9"];
+  const lines = [];
+  lines.push("Mental Health Triage (Educational) Summary");
+  lines.push(`PHQ-9: ${phq} (${bandPHQ(phq)})`);
+  lines.push(`GAD-7: ${gad} (${bandGAD(gad)})`);
+  lines.push(`PHQ-9 Q9 safety item: ${q9===null ? "not answered" : q9===0 ? "0 (Not at all)" : q9 + " (>0)"}`);
+  lines.push("");
+  lines.push("Preferences:");
+  triageQuestions.forEach(q => {
+    const v = state.triage[q.id];
+    if(v === null) return;
+    let txt = "";
+    if(q.type === "yesno") txt = v ? "Yes" : "No";
+    if(q.type === "choice") {
+      const found = q.choices.find(c => c.value === v);
+      txt = found ? found.label : String(v);
+    }
+    lines.push(`- ${q.text} ${txt}`);
+  });
+  return lines.join("\n");
+}
+
+async function copyText(text){
+  try{
+    await navigator.clipboard.writeText(text);
+    alert("Copied to clipboard.");
+  } catch(e){
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    ta.remove();
+    alert("Copied to clipboard.");
+  }
+}
+
+/* ===========================
+   WIREFRAME
+=========================== */
+function renderAll(){
+  renderScores();
+  renderAlerts();
+  renderScreening();
+  renderTriage();
+}
+
+function resetAll(){
+  state.symptoms = Object.fromEntries(symptomQuestions.map(q => [q.id, null]));
+  state.triage = Object.fromEntries(triageQuestions.map(q => [q.id, null]));
+  $("results").innerHTML = `
+    <div class="rec">
+      <div class="top">
+        <div class="name">No results yet</div>
+        <span class="tag">Tap “Rank options”</span>
+      </div>
+      <ul>
+        <li>Complete PHQ-9 and GAD-7</li>
+        <li>Set a few priorities (sleep/weight/sexual side effects, etc.)</li>
+        <li>Then rank</li>
+      </ul>
+    </div>`;
+  renderAll();
+}
+
+$("btnRank").onclick = () => {
+  const ranked = rankMeds();
+  renderResults(ranked);
+};
+
+$("btnShare").onclick = async () => {
+  const ranked = rankMeds().slice(0,3);
+  const summary = buildSummary() + "\n\nTop 3 (educational):\n" + ranked.map((m,i)=> `${i+1}. ${m.name} (Fit ${m.score}/100)`).join("\n");
+  await copyText(summary);
+};
+
+$("btnReset").onclick = resetAll;
+
+renderScreening();
+renderTriage();
+renderScores();
+renderAlerts();
+</script>
+</body>
+</html>
